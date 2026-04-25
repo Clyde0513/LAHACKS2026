@@ -4,7 +4,12 @@ import { fill } from '@cloudinary/url-gen/actions/resize';
 import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto } from '@cloudinary/url-gen/qualifiers/format';
 import { auto as autoQuality } from '@cloudinary/url-gen/qualifiers/quality';
-import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
+import { autoGravity, compass } from '@cloudinary/url-gen/qualifiers/gravity';
+import { source as overlaySource } from '@cloudinary/url-gen/actions/overlay';
+import { text as textSource } from '@cloudinary/url-gen/qualifiers/source';
+import { TextStyle } from '@cloudinary/url-gen/qualifiers/textStyle';
+import { Position } from '@cloudinary/url-gen/qualifiers/position';
+import { improve } from '@cloudinary/url-gen/actions/adjust';
 import { cld } from '../cloudinary/config';
 import { generateLesson, simplifyCard, anotherExample } from '../api/generateLesson';
 import type { CheckpointData, Lesson, LessonCard, QuizResponse, Roadmap } from '../types';
@@ -143,14 +148,29 @@ function QuizOverlay({ card, onClose }: QuizProps) {
 interface VisualProps {
   cardIndex: number;
   uploadedPublicId?: string;
+  moduleTitle: string;
 }
-function ConceptVisual({ cardIndex, uploadedPublicId }: VisualProps) {
+function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle }: VisualProps) {
   const [imgError, setImgError] = useState(false);
   const publicId = uploadedPublicId ?? sampleForCard(cardIndex);
 
+  // Build the Cloudinary image: smart-crop + AI-enhance + module title overlay
   const cldImg = cld
     .image(publicId)
     .resize(fill().width(700).height(320).gravity(autoGravity()))
+    .adjust(improve());
+
+  // Overlay the module title on sample images (not on user uploads)
+  if (!uploadedPublicId) {
+    const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '…' : moduleTitle;
+    cldImg.overlay(
+      overlaySource(
+        textSource(label, new TextStyle('Arial', 24).fontWeight('bold')).textColor('white'),
+      ).position(new Position().gravity(compass('south_west')).offsetX(16).offsetY(14)),
+    );
+  }
+
+  cldImg
     .delivery(format(auto()))
     .delivery(quality(autoQuality()));
 
@@ -161,11 +181,11 @@ function ConceptVisual({ cardIndex, uploadedPublicId }: VisualProps) {
       <AdvancedImage
         cldImg={cldImg}
         plugins={[placeholder({ mode: 'blur' }), lazyload()]}
-        alt="Concept visual"
+        alt={moduleTitle}
         className="lsn-visual-img"
         onError={() => setImgError(true)}
       />
-      <span className="lsn-visual-badge">Visual via Cloudinary</span>
+      <span className="lsn-visual-badge">✦ Cloudinary AI</span>
     </div>
   );
 }
@@ -319,8 +339,8 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
             <span>{card.moduleTitle}</span>
           </div>
 
-          {/* Cloudinary visual */}
-          <ConceptVisual cardIndex={cardIndex} uploadedPublicId={uploadedPublicId} />
+          {/* Cloudinary visual — smart-cropped + AI-enhanced + module title overlay */}
+          <ConceptVisual cardIndex={cardIndex} uploadedPublicId={uploadedPublicId} moduleTitle={card.moduleTitle} />
 
           {/* Concept title */}
           <h1 className="lsn-card-title" style={{ color: grad.accent }}>{card.title}</h1>

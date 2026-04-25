@@ -1,5 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { DragEvent, ChangeEvent } from 'react';
+import { AdvancedImage, lazyload, placeholder } from '@cloudinary/react';
+import { fill } from '@cloudinary/url-gen/actions/resize';
+import { format, quality } from '@cloudinary/url-gen/actions/delivery';
+import { auto } from '@cloudinary/url-gen/qualifiers/format';
+import { auto as autoQuality } from '@cloudinary/url-gen/qualifiers/quality';
+import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
+import { improve } from '@cloudinary/url-gen/actions/adjust';
+import { cld } from '../cloudinary/config';
 import { analyzeUpload } from '../api/analyzeUpload';
 import type { UploadAnalysis, UploadQuizItem } from '../types';
 import './UploadLearnScreen.css';
@@ -246,26 +254,46 @@ function MiniQuiz({
 
 // ── Results view ──────────────────────────────────────────────────────────────
 function ResultsView({
+  publicId,
   preview,
   analysis,
   onStartLesson,
 }: {
+  publicId: string;
   preview: string;
   analysis: UploadAnalysis;
   onStartLesson: () => void;
 }) {
   const [showQuiz, setShowQuiz]   = useState(false);
   const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [imgErr, setImgErr]       = useState(false);
+
+  // Cloudinary-optimized: smart auto-crop + AI enhance
+  const cldImg = cld
+    .image(publicId)
+    .resize(fill().width(640).height(360).gravity(autoGravity()))
+    .adjust(improve())
+    .delivery(format(auto()))
+    .delivery(quality(autoQuality()));
 
   return (
     <div className="upl-results">
       {/* ── Image + detected topic ── */}
       <div className="upl-preview-row">
-        <img
-          className="upl-preview-img"
-          src={preview}
-          alt="Uploaded content"
-        />
+        <div className="upl-preview-img-wrap">
+          {imgErr ? (
+            <img className="upl-preview-img" src={preview} alt="Uploaded content" />
+          ) : (
+            <AdvancedImage
+              cldImg={cldImg}
+              plugins={[placeholder({ mode: 'blur' }), lazyload()]}
+              alt="Uploaded content"
+              className="upl-preview-img"
+              onError={() => setImgErr(true)}
+            />
+          )}
+          <span className="upl-cld-badge">✦ Smart crop via Cloudinary</span>
+        </div>
         <div className="upl-preview-meta">
           <span className="upl-topic-badge">🏷️ {analysis.topic}</span>
           <p className="upl-summary">{analysis.summary}</p>
@@ -450,6 +478,7 @@ export default function UploadLearnScreen({ onBack, onStartLesson }: Props) {
         {/* ── Results ── */}
         {phase.kind === 'results' && (
           <ResultsView
+            publicId={phase.publicId}
             preview={phase.preview}
             analysis={phase.analysis}
             onStartLesson={() => onStartLesson(phase.analysis.topic, phase.publicId)}

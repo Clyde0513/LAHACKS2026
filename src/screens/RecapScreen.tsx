@@ -2,6 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { generateRecap } from '../api/generateRecap';
 import { saveLessonRecord } from '../lib/lessonHistory';
 import { supabase } from '../lib/supabase';
+import { cld } from '../cloudinary/config';
+import { fill } from '@cloudinary/url-gen/actions/resize';
+import { format, quality } from '@cloudinary/url-gen/actions/delivery';
+import { auto } from '@cloudinary/url-gen/qualifiers/format';
+import { auto as autoQuality } from '@cloudinary/url-gen/qualifiers/quality';
+import { compass } from '@cloudinary/url-gen/qualifiers/gravity';
+import { brightness } from '@cloudinary/url-gen/actions/adjust';
+import { source as overlaySource } from '@cloudinary/url-gen/actions/overlay';
+import { text as textSource } from '@cloudinary/url-gen/qualifiers/source';
+import { TextStyle } from '@cloudinary/url-gen/qualifiers/textStyle';
+import { Position } from '@cloudinary/url-gen/qualifiers/position';
 import type { LessonCompletion, RecapData, RelatedTopic } from '../types';
 import './RecapScreen.css';
 
@@ -16,6 +27,51 @@ function calcAvgConfidence(responses: LessonCompletion['responses']): number {
   const map = { low: 1, medium: 2, high: 3 };
   const total = responses.reduce((s, r) => s + map[r.confidence], 0);
   return Math.round((total / (responses.length * 3)) * 100);
+}
+
+// Builds a Cloudinary URL for a shareable completion card image
+function buildShareCardUrl(topic: string, score: number): string {
+  // Strip only chars that break Cloudinary URL structure (colon is the l_text delimiter)
+  // Do NOT convert spaces to underscores — the SDK encodes them; we pre-converting causes literal _ in output
+  const safeTopic = topic.replace(/:/g, '').replace(/[,/\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+  const scoreLabel = `${score} out of 100`;
+  return cld
+    .image('samples/landscapes/nature-mountains')
+    .resize(fill().width(1200).height(630))
+    .adjust(brightness().level(-38))
+    // "CERTIFICATE OF COMPLETION" header
+    .overlay(
+      overlaySource(
+        textSource('CERTIFICATE  OF  COMPLETION', new TextStyle('Arial', 22)).textColor('rgb:a99ffa'),
+      ).position(new Position().gravity(compass('north_west')).offsetX(80).offsetY(68)),
+    )
+    // Topic title
+    .overlay(
+      overlaySource(
+        textSource(safeTopic, new TextStyle('Arial', 58).fontWeight('bold')).textColor('white'),
+      ).position(new Position().gravity(compass('north_west')).offsetX(80).offsetY(115)),
+    )
+    // Score line
+    .overlay(
+      overlaySource(
+        textSource(scoreLabel, new TextStyle('Arial', 34)).textColor('rgb:34d399'),
+      ).position(new Position().gravity(compass('north_west')).offsetX(80).offsetY(225)),
+    )
+    // Congratulations sub-line
+    .overlay(
+      overlaySource(
+        textSource('Congratulations on completing this lesson!', new TextStyle('Arial', 20)).textColor('rgb:e2e8f0'),
+      ).position(new Position().gravity(compass('north_west')).offsetX(80).offsetY(278)),
+    )
+    // Branding
+    .overlay(
+      overlaySource(
+        textSource('TeachMeNew', new TextStyle('Arial', 26).fontWeight('bold')).textColor('rgb:a99ffa'),
+      ).position(new Position().gravity(compass('south_west')).offsetX(80).offsetY(55)),
+    )
+    .delivery(format(auto()))
+    .delivery(quality(autoQuality()))
+    .toURL();
 }
 
 function scoreColor(score: number): string {
@@ -299,6 +355,14 @@ export default function RecapScreen({
                 <button className="tmn-btn-ghost rcp-restart-btn" onClick={onRestart}>
                   ↺ Restart topic
                 </button>
+                <a
+                  className="tmn-btn-ghost rcp-share-btn"
+                  href={buildShareCardUrl(roadmap.topic, quizScore)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🎓 Share certificate
+                </a>
                 <button className="tmn-btn-primary rcp-home-btn" onClick={onHome}>
                   ← Back to home
                 </button>

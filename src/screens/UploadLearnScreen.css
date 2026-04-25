@@ -303,6 +303,12 @@
   align-items: flex-start;
 }
 
+.upl-preview-img-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 200px;
+}
+
 .upl-preview-img {
   width: 200px;
   height: 156px;
@@ -310,6 +316,23 @@
   object-fit: cover;
   border-radius: 14px;
   border: 1px solid var(--border);
+  display: block;
+}
+
+.upl-cld-badge {
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .upl-preview-meta {
@@ -658,6 +681,7 @@
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 580px) {
   .upl-preview-row    { flex-direction: column; }
+  .upl-preview-img-wrap { width: 100%; }
   .upl-preview-img    { width: 100%; height: 200px; }
   .upl-concepts-grid  { grid-template-columns: 1fr; }
   .upl-glossary       { grid-template-columns: 1fr; }
