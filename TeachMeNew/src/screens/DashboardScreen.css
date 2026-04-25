@@ -1,0 +1,370 @@
+/* ─────────────────────────────────────────────
+   DashboardScreen – dsh- prefix
+   Inherits design tokens from App.css :root
+───────────────────────────────────────────── */
+
+.dsh-root {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Nav label ────────────────────────────────────────────────────────────── */
+.dsh-nav-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Main ─────────────────────────────────────────────────────────────────── */
+.dsh-main {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Stats row ────────────────────────────────────────────────────────────── */
+.dsh-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  animation: dsh-fade-up 0.3s ease both;
+}
+
+.dsh-stat-divider {
+  width: 1px;
+  height: 44px;
+  background: var(--border);
+}
+
+.dsh-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dsh-stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+
+.dsh-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-align: center;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+.dsh-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.dsh-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dsh-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dsh-section-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: -0.5rem 0 0;
+}
+
+/* ── Confidence chart ─────────────────────────────────────────────────────── */
+.dsh-conf-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dsh-conf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.dsh-conf-topic {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  width: 130px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dsh-conf-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dsh-conf-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dsh-conf-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Recommended chips ────────────────────────────────────────────────────── */
+.dsh-recommended {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.dsh-rec-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.15s;
+}
+
+.dsh-rec-chip:hover {
+  background: rgba(124, 111, 247, 0.08);
+  border-color: rgba(124, 111, 247, 0.35);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+/* ── Lesson records ───────────────────────────────────────────────────────── */
+.dsh-records {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dsh-record {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.18s, background 0.18s;
+  animation: dsh-fade-up 0.25s ease both;
+}
+
+.dsh-record:hover {
+  border-color: rgba(124, 111, 247, 0.2);
+}
+
+.dsh-record-left { flex-shrink: 0; }
+
+.dsh-score-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--badge-color, var(--accent)) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--badge-color, var(--accent)) 30%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--badge-color, var(--accent));
+}
+
+.dsh-record-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+
+.dsh-record-topic {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dsh-record-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.dsh-record-pill {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.dsh-record-time {
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Confidence mini-bar */
+.dsh-record-conf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.dsh-record-conf-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.dsh-record-conf-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dsh-record-conf-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.dsh-record-conf-pct {
+  font-size: 0.67rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 30px;
+  text-align: right;
+}
+
+/* Record actions */
+.dsh-record-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.dsh-reopen-btn { font-size: 0.78rem; padding: 0.35rem 0.75rem; white-space: nowrap; }
+.dsh-del-btn    { font-size: 0.72rem; padding: 0.35rem 0.6rem; }
+
+.dsh-del-confirm {
+  font-size: 0.72rem;
+  color: #f43f5e;
+  border-color: #f43f5e;
+}
+
+/* ── Clear all ────────────────────────────────────────────────────────────── */
+.dsh-clear-btn { font-size: 0.72rem; opacity: 0.6; }
+
+.dsh-clear-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dsh-clear-yes {
+  color: #f43f5e !important;
+  border-color: #f43f5e !important;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.dsh-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  padding: 4rem 2rem;
+}
+
+.dsh-empty-icon { font-size: 3rem; line-height: 1; }
+
+.dsh-empty-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.dsh-empty-sub {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 340px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes dsh-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .dsh-stats        { flex-direction: column; gap: 1.25rem; }
+  .dsh-stat-divider { width: 60px; height: 1px; }
+  .dsh-conf-topic   { width: 90px; }
+  .dsh-record       { flex-wrap: wrap; }
+  .dsh-record-actions { flex-direction: row; width: 100%; }
+  .dsh-reopen-btn   { flex: 1; }
+}

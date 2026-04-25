@@ -18,11 +18,6 @@ This project uses Cloudinary for image management. If you don't have a Cloudinar
 - [Sign up for free](https://cld.media/reactregister)
 - Find your cloud name in your [dashboard](https://console.cloudinary.com/app/home/dashboard)
 
-## Environment Variables
-
-Your `.env` file has been pre-configured with:
-- `VITE_CLOUDINARY_CLOUD_NAME`: duhvyfplb
-- `VITE_CLOUDINARY_UPLOAD_PRESET`: teach
 
 **Note**: Transformations work without an upload preset (using sample images). Uploads require an unsigned upload preset.
 

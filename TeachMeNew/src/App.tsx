@@ -1,129 +1,315 @@
-import { useState } from 'react';
-import { AdvancedImage, placeholder, lazyload } from '@cloudinary/react';
-import { fill } from '@cloudinary/url-gen/actions/resize';
-import { format, quality } from '@cloudinary/url-gen/actions/delivery';
-import { auto } from '@cloudinary/url-gen/qualifiers/format';
-import { auto as autoQuality } from '@cloudinary/url-gen/qualifiers/quality';
-import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
-import { cld, uploadPreset } from './cloudinary/config';
-import { UploadWidget } from './cloudinary/UploadWidget';
-import type { CloudinaryUploadResult } from './cloudinary/UploadWidget';
+import { useState, useRef, useEffect } from 'react';
+import RoadmapScreen from './screens/RoadmapScreen';
+import LessonScreen from './screens/LessonScreen';
+import UploadLearnScreen from './screens/UploadLearnScreen';
+import RecapScreen from './screens/RecapScreen';
+import DashboardScreen from './screens/DashboardScreen';
+import type { LessonCompletion, Roadmap } from './types';
 import './App.css';
 
-const hasUploadPreset = Boolean(uploadPreset);
+type Screen = 'home' | 'roadmap' | 'lesson' | 'upload' | 'recap' | 'dashboard';
 
-const PROMPTS_WITH_UPLOAD = [
-  'Create an image gallery with lazy loading and responsive images',
-  'Create a video player that plays a Cloudinary video',
-  'Add image overlays with text or logos',
+const SUGGESTED_TOPICS = [
+  { label: 'Quantum Computing', emoji: '⚛️' },
+  { label: 'Music Theory', emoji: '🎵' },
+  { label: 'Japanese Cooking', emoji: '🍱' },
+  { label: 'Machine Learning', emoji: '🤖' },
+  { label: 'Climate Science', emoji: '🌍' },
+  { label: 'Philosophy of Mind', emoji: '🧠' },
+  { label: 'Astrophysics', emoji: '🔭' },
+  { label: 'Origami', emoji: '🦢' },
+  { label: 'Blockchain', emoji: '🔗' },
+  { label: 'Stoicism', emoji: '🏛️' },
 ];
 
-const PROMPTS_WITHOUT_UPLOAD = [
-  "Let's try uploading — help me add an upload preset and upload widget",
-  ...PROMPTS_WITH_UPLOAD,
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    title: 'Pick a topic',
+    desc: "Type anything you're curious about or choose from our suggestions.",
+  },
+  {
+    step: '02',
+    title: 'Get a visual roadmap',
+    desc: 'AI builds a structured lesson plan with concept cards, diagrams, and media.',
+  },
+  {
+    step: '03',
+    title: 'Learn in 15 minutes',
+    desc: 'Move through bite-sized cards, answer quizzes, and test your understanding.',
+  },
 ];
 
 function App() {
-  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  const [clickedIds, setClickedIds] = useState(new Set<number>());
+  const [screen, setScreen]             = useState<Screen>('home');
+  const [activeTopic, setActiveTopic]   = useState('');
+  const [activeRoadmap, setActiveRoadmap] = useState<Roadmap | null>(null);
+  const [uploadedPublicId, setUploadedPublicId] = useState<string | undefined>();
+  const [activeCompletion, setActiveCompletion] = useState<LessonCompletion | null>(null);
 
-  const handleUploadSuccess = (result: CloudinaryUploadResult) => {
-    console.log('Upload successful:', result);
-    // result contains everything you need to work with the uploaded asset:
-    //   result.public_id   — Cloudinary asset ID (use with cld.image() for transformations)
-    //   result.secure_url  — direct HTTPS URL to the original file
-    //   result.url         — HTTP URL (prefer secure_url)
-    //   result.width / result.height — image dimensions
-    //   result.format      — file format (e.g. 'jpg', 'png', 'webp')
-    //   result.bytes       — file size in bytes
-    //   result.resource_type — 'image', 'video', or 'raw'
-    setUploadedImageId(result.public_id);
-    setUploadedUrl(result.secure_url); // store the URL to use anywhere in your app
+  const [topic, setTopic]   = useState('');
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Surprise me: pick a random suggested topic
+  const handleSurpriseMe = () => {
+    const random = SUGGESTED_TOPICS[Math.floor(Math.random() * SUGGESTED_TOPICS.length)];
+    setTopic(random.label);
+    inputRef.current?.focus();
   };
 
-  const handleUploadError = (error: Error) => {
-    console.error('Upload error:', error);
-    alert(`Upload failed: ${error.message}`);
+  const handleChipClick = (label: string) => {
+    setTopic(label);
+    inputRef.current?.focus();
   };
 
-  const copyPrompt = (text: string, id: number) => {
-    void navigator.clipboard.writeText(text).then(() => {
-      setClickedIds((prev) => new Set(prev).add(id));
-      setTimeout(() => setClickedIds( (prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      }), 2000);
-    });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) return;
+    setActiveTopic(topic.trim());
+    setScreen('roadmap');
   };
 
-  // Display uploaded image if available, otherwise show a sample
-  const imageId = uploadedImageId || 'samples/people/bicycle';
-  
-  const displayImage = cld
-    .image(imageId)
-    .resize(fill().width(600).height(400).gravity(autoGravity()))
-    .delivery(format(auto()))
-    .delivery(quality(autoQuality()));
+  const handleBackToHome = () => {
+    setScreen('home');
+  };
+
+  const handleStartLesson = (roadmap: Roadmap) => {
+    setActiveRoadmap(roadmap);
+    setScreen('lesson');
+  };
+
+  const handleStartFromUpload = (topic: string, publicId: string) => {
+    setUploadedPublicId(publicId);
+    setActiveTopic(topic);
+    setScreen('roadmap');
+  };
+
+  const handleFinishLesson = (responses: import('./types').QuizResponse[]) => {
+    if (activeRoadmap) {
+      setActiveCompletion({ roadmap: activeRoadmap, responses, uploadedPublicId });
+      setScreen('recap');
+    } else {
+      setScreen('home');
+    }
+  };
+
+  const handleRecapHome = () => {
+    setScreen('home');
+    setActiveTopic('');
+    setActiveRoadmap(null);
+    setUploadedPublicId(undefined);
+    setActiveCompletion(null);
+  };
+
+  const handleRecapContinue = (topic: string) => {
+    setActiveTopic(topic);
+    setActiveRoadmap(null);
+    setUploadedPublicId(undefined);
+    setActiveCompletion(null);
+    setScreen('roadmap');
+  };
+
+  const handleRecapRestart = () => {
+    if (!activeCompletion) { setScreen('home'); return; }
+    setActiveRoadmap(activeCompletion.roadmap);
+    setActiveCompletion(null);
+    setScreen('lesson');
+  };
+
+  // Keyboard shortcut: Enter submits, Escape clears
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTopic('');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  if (screen === 'roadmap') {
+    return (
+      <RoadmapScreen
+        topic={activeTopic}
+        onBack={handleBackToHome}
+        onStart={handleStartLesson}
+      />
+    );
+  }
+
+  if (screen === 'lesson' && activeRoadmap) {
+    return (
+      <LessonScreen
+        roadmap={activeRoadmap}
+        onBack={() => setScreen('roadmap')}
+        onFinish={handleFinishLesson}
+        uploadedPublicId={uploadedPublicId}
+      />
+    );
+  }
+
+  if (screen === 'recap' && activeCompletion) {
+    return (
+      <RecapScreen
+        completion={activeCompletion}
+        onHome={handleRecapHome}
+        onContinue={handleRecapContinue}
+        onRestart={handleRecapRestart}
+        onDashboard={() => setScreen('dashboard')}
+      />
+    );
+  }
+
+  if (screen === 'dashboard') {
+    return (
+      <DashboardScreen
+        onBack={() => setScreen('home')}
+        onStartTopic={(topic) => {
+          setActiveTopic(topic);
+          setActiveRoadmap(null);
+          setScreen('roadmap');
+        }}
+      />
+    );
+  }
+
+  if (screen === 'upload') {
+    return (
+      <UploadLearnScreen
+        onBack={() => setScreen('home')}
+        onStartLesson={handleStartFromUpload}
+      />
+    );
+  }
 
   return (
-    <div className="app">
-      <main className="main-content">
-        <h1>Cloudinary React Starter Kit</h1>
-        <p>This is a ready-to-use development environment with Cloudinary integration.</p>
-        
-        {hasUploadPreset && (
-          <div className="upload-section">
-            <h2>Upload an Image</h2>
-            <UploadWidget
-              onUploadSuccess={handleUploadSuccess}
-              onUploadError={handleUploadError}
-              buttonText="Upload Image"
-            />
-          </div>
-        )}
-
-        <div className="image-section">
-          <h2>Display Image</h2>
-          <AdvancedImage
-            cldImg={displayImage}
-            plugins={[placeholder({ mode: 'blur' }), lazyload()]}
-            alt={uploadedImageId ? 'Your uploaded image' : 'Sample image'}
-            className="display-image"
-          />
-          {uploadedImageId && (
-            <p className="image-info">Public ID: {uploadedImageId}</p>
-          )}
-          {uploadedUrl && (
-            <p className="image-info">
-              URL:{' '}
-              <a href={uploadedUrl} target="_blank" rel="noopener noreferrer">
-                {uploadedUrl}
-              </a>
-            </p>
-          )}
+    <div className="tmn-root">
+      {/* ── Nav ── */}
+      <header className="tmn-nav">
+        <div className="tmn-nav-logo">
+          <span className="tmn-logo-icon">✦</span>
+          <span className="tmn-logo-text">TeachMeNew</span>
         </div>
+        <div className="tmn-nav-actions">
+          <button
+            className="tmn-btn-ghost tmn-btn-sm"
+            onClick={() => setScreen('dashboard')}
+          >
+            📊 Dashboard
+          </button>
+          <button
+            className="tmn-btn-ghost tmn-btn-sm"
+            onClick={() => setScreen('upload')}
+          >
+            📸 Upload to Learn
+          </button>
+          <button className="tmn-btn-ghost">Sign in</button>
+          <button className="tmn-btn-primary tmn-btn-sm">Continue as guest</button>
+        </div>
+      </header>
 
-        <div className="ai-prompts-section">
-          <h2>🤖 Try Asking Your AI Assistant</h2>
-          <p className="prompts-intro">
-            <strong>Copy and paste</strong> one of these prompts into your AI assistant:
+      {/* ── Hero ── */}
+      <main className="tmn-hero">
+        {/* Ambient glow blobs */}
+        <div className="tmn-glow tmn-glow-1" aria-hidden="true" />
+        <div className="tmn-glow tmn-glow-2" aria-hidden="true" />
+
+        <div className="tmn-hero-content">
+          <div className="tmn-badge">AI-powered learning</div>
+          <h1 className="tmn-headline">
+            What do you want<br />to <span className="tmn-headline-accent">learn today?</span>
+          </h1>
+          <p className="tmn-subline">
+            Go from zero to understanding any topic in&nbsp;10–15&nbsp;minutes —<br className="tmn-br-lg" />
+            through AI-generated, visual, personalised lessons.
           </p>
-          <ul className="prompts-list">
-            {(hasUploadPreset ? PROMPTS_WITH_UPLOAD : PROMPTS_WITHOUT_UPLOAD).map((text, i) => (
-              <li
-                key={i}
-                onClick={() => copyPrompt(text, i)}
-                title="Click to copy"
-                className={clickedIds.has(i) ? 'clicked' : ''}
+
+          {/* ── Search bar ── */}
+          <form className={`tmn-search-form${focused ? ' tmn-search-focused' : ''}`} onSubmit={handleSubmit}>
+            <span className="tmn-search-icon" aria-hidden="true">🔍</span>
+            <input
+              ref={inputRef}
+              className="tmn-search-input"
+              type="text"
+              placeholder="e.g. Quantum Computing, Jazz Piano, Roman History…"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              aria-label="Enter a topic to learn"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {topic && (
+              <button
+                type="button"
+                className="tmn-search-clear"
+                onClick={() => { setTopic(''); inputRef.current?.focus(); }}
+                aria-label="Clear"
               >
-                {text}
-              </li>
+                ✕
+              </button>
+            )}
+            <button
+              type="submit"
+              className="tmn-btn-primary tmn-search-submit"
+              disabled={!topic.trim()}
+            >
+              Start learning →
+            </button>
+          </form>
+
+          {/* ── Chips ── */}
+          <div className="tmn-chips-row">
+            <span className="tmn-chips-label">Try:</span>
+            {SUGGESTED_TOPICS.map(({ label, emoji }) => (
+              <button
+                key={label}
+                className={`tmn-chip${topic === label ? ' tmn-chip-active' : ''}`}
+                onClick={() => handleChipClick(label)}
+              >
+                {emoji} {label}
+              </button>
             ))}
-          </ul>
+          </div>
+
+          {/* ── Surprise me ── */}
+          <button className="tmn-surprise-btn" onClick={handleSurpriseMe}>
+            <span className="tmn-surprise-icon">🎲</span> Surprise me
+          </button>
         </div>
       </main>
+
+      {/* ── How it works ── */}
+      <section className="tmn-how">
+        <h2 className="tmn-how-title">How it works</h2>
+        <div className="tmn-how-grid">
+          {HOW_IT_WORKS.map(({ step, title, desc }) => (
+            <div key={step} className="tmn-how-card">
+              <div className="tmn-how-step">{step}</div>
+              <h3 className="tmn-how-card-title">{title}</h3>
+              <p className="tmn-how-card-desc">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Footer CTA ── */}
+      <section className="tmn-footer-cta">
+        <p className="tmn-footer-cta-text">Ready to start learning?</p>
+        <button
+          className="tmn-btn-primary tmn-btn-lg"
+          onClick={() => { inputRef.current?.scrollIntoView({ behavior: 'smooth' }); inputRef.current?.focus(); }}
+        >
+          Pick your first topic
+        </button>
+        <p className="tmn-footer-note">No account required &mdash; start in seconds.</p>
+      </section>
+
+      <footer className="tmn-footer">
+        <span>TeachMeNew &copy; 2026</span>
+        <span className="tmn-footer-sep">·</span>
+        <span>Built with Cloudinary AI</span>
+      </footer>
     </div>
   );
 }

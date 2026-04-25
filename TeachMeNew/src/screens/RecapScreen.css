@@ -1,0 +1,403 @@
+/* ─────────────────────────────────────────────
+   RecapScreen – rcp- prefix
+   Inherits design tokens from App.css :root
+───────────────────────────────────────────── */
+
+.rcp-root {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Nav ──────────────────────────────────────────────────────────────────── */
+.rcp-nav-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Main ─────────────────────────────────────────────────────────────────── */
+.rcp-main {
+  flex: 1;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.rcp-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  padding: 2rem 1rem 0.5rem;
+}
+
+.rcp-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+  background: rgba(124, 111, 247, 0.1);
+  border: 1px solid rgba(124, 111, 247, 0.25);
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+}
+
+.rcp-topic {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text);
+  margin: 0;
+}
+
+.rcp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.rcp-meta-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+
+/* ── Score rings ──────────────────────────────────────────────────────────── */
+.rcp-scores {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  animation: rcp-fade-up 0.35s ease both;
+}
+
+.rcp-scores-divider {
+  width: 1px;
+  height: 70px;
+  background: var(--border);
+}
+
+.rcp-ring-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.rcp-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.rcp-ring-bg {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 10;
+}
+
+.rcp-ring-fill {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 251;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rcp-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.rcp-ring-pct {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rcp-ring-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+.rcp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rcp-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.rcp-section-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: -0.5rem 0 0;
+}
+
+/* ── Takeaways ─────────────────────────────────────────────────────────────── */
+.rcp-takeaway-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.rcp-takeaway {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.rcp-takeaway-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rcp-takeaway-icon {
+  color: var(--accent-light);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── Two-col strengths/weakspots ─────────────────────────────────────────── */
+.rcp-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.rcp-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.rcp-col-strength { border-left: 3px solid #34d399; }
+.rcp-col-weak     { border-left: 3px solid #fb923c; }
+
+.rcp-col-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.rcp-col-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rcp-col-item {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  padding-left: 0.9rem;
+  position: relative;
+}
+
+.rcp-col-strength .rcp-col-item::before { content: '✓'; position: absolute; left: 0; color: #34d399; font-size: 0.7rem; font-weight: 700; }
+.rcp-col-weak     .rcp-col-item::before { content: '→'; position: absolute; left: 0; color: #fb923c; font-size: 0.7rem; font-weight: 700; }
+
+/* ── Related topics ───────────────────────────────────────────────────────── */
+.rcp-related {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.rcp-related-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.18s, border-color 0.18s, transform 0.15s;
+}
+
+.rcp-related-card:hover {
+  background: rgba(124, 111, 247, 0.06);
+  border-color: rgba(124, 111, 247, 0.3);
+  transform: translateX(3px);
+}
+
+.rcp-related-emoji { font-size: 1.5rem; flex-shrink: 0; }
+
+.rcp-related-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.rcp-related-topic {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.rcp-related-reason {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.rcp-related-arrow {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+.rcp-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+}
+
+.rcp-save-btn {
+  font-size: 0.88rem;
+  padding: 0.65rem 1.2rem;
+}
+
+.rcp-saved {
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+  opacity: 0.7;
+}
+
+.rcp-restart-btn {
+  font-size: 0.88rem;
+  padding: 0.65rem 1.2rem;
+}
+
+.rcp-home-btn {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.92rem;
+  border-radius: 12px;
+}
+
+/* ── Skeleton ─────────────────────────────────────────────────────────────── */
+.rcp-skel-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rcp-skel {
+  background: var(--surface);
+  border-radius: 8px;
+  animation: rcp-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes rcp-shimmer {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.7; }
+}
+
+.rcp-skel-badge   { width: 140px; height: 24px; border-radius: 999px; }
+.rcp-skel-title   { height: 26px; width: 60%; }
+.rcp-skel-sub     { height: 14px; width: 40%; }
+.rcp-skel-row     { display: flex; gap: 1rem; justify-content: center; margin: 0.5rem 0; }
+.rcp-skel-ring    { width: 100px; height: 100px; border-radius: 50%; }
+.rcp-skel-section { height: 16px; width: 160px; margin-top: 0.5rem; }
+.rcp-skel-line    { height: 58px; border-radius: 12px; }
+
+/* ── Error ────────────────────────────────────────────────────────────────── */
+.rcp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes rcp-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .rcp-scores    { gap: 1.5rem; padding: 1.25rem; }
+  .rcp-ring-wrap { width: 80px; height: 80px; }
+  .rcp-ring-pct  { font-size: 1.1rem; }
+  .rcp-two-col   { grid-template-columns: 1fr; }
+  .rcp-actions   { flex-direction: column; }
+  .rcp-home-btn  { width: 100%; }
+}

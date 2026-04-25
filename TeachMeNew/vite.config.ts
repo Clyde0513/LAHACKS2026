@@ -5,8 +5,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Analytics: Mark this project as created via create-cloudinary-react CLI
     'process.env.CLOUDINARY_SOURCE': '"cli"',
     'process.env.CLD_CLI': '"true"',
+  },
+  server: {
+    proxy: {
+      // All /api/* requests in dev are forwarded to the Express API server
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
 })
