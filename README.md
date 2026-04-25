@@ -1,32 +1,125 @@
 # TeachMeNew
 
-A Cloudinary React + Vite + TypeScript project scaffolded with [create-cloudinary-react](https://github.com/cloudinary-devs/create-cloudinary-react).
+> **LA Hacks 2026** — AI-powered visual learning app. Upload an image or enter any topic, and TeachMeNew builds a full lesson roadmap, teaches it card-by-card with analogies, quizzes you along the way, and generates a personalized recap.
 
-## Prerequisites
+## Tech Stack
 
-- **Node.js** — use a current LTS release. Supported ranges are listed under `engines` in this `package.json`.
+| Layer | Technology |
+|---|---|
+| Frontend | React 19 + Vite + TypeScript |
+| Styling | Custom dark-theme CSS design system |
+| AI | OpenAI GPT-4o-mini (via secure server-side proxy) |
+| Media | Cloudinary (image uploads + analysis) |
+| Auth | Supabase Auth (email/password + PKCE password reset) |
+| Database | Supabase Postgres (user progress, RLS-secured) |
+| Email | Resend (password reset emails) |
+| Deployment | Vercel (Vite frontend + serverless API routes) |
 
-## Quick Start
+## Features
 
-```bash
-npm run dev
+- **7 learning screens** — Home → Roadmap → Lesson → Checkpoint → Upload → Recap → Dashboard
+- **AI lesson generation** — generates a roadmap, lesson cards with analogies & key terms, and a personalized recap
+- **Image-to-lesson** — upload any image via Cloudinary; GPT-4o-mini vision extracts concepts, glossary, and quiz questions
+- **Simplify & re-explain** — tap "Simplify" or "Another analogy" on any card for a different explanation
+- **Checkpoint quizzes** — per-card quiz with confidence tracking (low / medium / high)
+- **Auth** — sign up with username + email + password, sign in, forgot password with branded email, PKCE reset flow
+- **Progress persistence** — lesson results saved to Supabase `user_progress` (per-user RLS) and localStorage; Dashboard merges both
+
+## Project Structure
+
+```
+TeachMeNew/
+├── api/                  # Vercel serverless API routes (production)
+│   ├── _lib/             # Shared OpenAI + Supabase admin helpers
+│   ├── generate-topic.ts
+│   ├── generate-lesson.ts
+│   ├── simplify-card.ts
+│   ├── another-example.ts
+│   ├── analyze-upload.ts
+│   ├── generate-recap.ts
+│   ├── save-progress.ts
+│   ├── forgot-password.ts
+│   └── health.ts
+├── server/               # Express server (local dev only)
+│   ├── index.ts
+│   ├── lib/              # OpenAI + Supabase admin helpers
+│   └── routes/           # Same routes as api/ but Express handlers
+├── src/
+│   ├── api/              # Browser fetch helpers (call /api/*)
+│   ├── context/          # AuthContext (Supabase auth state)
+│   ├── lib/              # Supabase browser client
+│   ├── screens/          # All 7 app screens + auth screens
+│   └── types.ts          # Shared TypeScript types
+├── supabase/
+│   └── schema.sql        # Full DB schema + RLS policies
+└── vercel.json           # Vercel build + SPA rewrite config
 ```
 
-## Cloudinary Setup
+## Local Development
 
-This project uses Cloudinary for image management. If you don't have a Cloudinary account yet:
-- [Sign up for free](https://cld.media/reactregister)
-- Find your cloud name in your [dashboard](https://console.cloudinary.com/app/home/dashboard)
+### Prerequisites
 
+- Node.js ≥ 20.19
+- A [Supabase](https://supabase.com) project
+- An [OpenAI](https://platform.openai.com) API key
+- A [Cloudinary](https://cloudinary.com) account
+- A [Resend](https://resend.com) API key (for password reset emails)
 
-**Note**: Transformations work without an upload preset (using sample images). Uploads require an unsigned upload preset.
+### Setup
 
-To create an unsigned upload preset:
-1. Go to https://console.cloudinary.com/app/settings/upload/presets
-2. Click "Add upload preset"
-3. Set it to "Unsigned" mode
-4. Add the preset name to your `.env` file
-5. **Save** the `.env` file and restart the dev server so the new values load correctly.
+1. **Clone and install**
+   ```bash
+   git clone <repo-url>
+   cd TeachMeNew
+   npm install
+   ```
+
+2. **Create `.env`** in the project root:
+   ```env
+   # Cloudinary (browser-safe)
+   VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+   VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+
+   # Supabase (browser-safe — anon key only)
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_anon_key
+
+   # Server-only secrets (never exposed to browser)
+   OPENAI_API_KEY=sk-...
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=eyJ...
+   RESEND_API_KEY=re_...
+   SITE_URL=http://localhost:5173
+   ```
+
+3. **Set up the database** — paste `supabase/schema.sql` into the Supabase SQL Editor and run it.
+
+4. **Configure Supabase Auth**
+   - In **Authentication → URL Configuration**, add `http://localhost:5173` to Redirect URLs
+   - Optionally disable **Confirm email** under Authentication → Providers → Email for easier local testing
+
+5. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   This runs Vite (port 5173) and the Express proxy server (port 3001) concurrently. The Vite dev server proxies all `/api/*` requests to Express.
+
+## Deployment (Vercel)
+
+The `api/` folder contains Vercel-native serverless function handlers — no separate server needed in production.
+
+1. Push to GitHub and connect the repo to Vercel
+2. Add all environment variables in **Vercel → Settings → Environment Variables**:
+   - All the same keys from `.env` above
+   - Set `SITE_URL` to your actual Vercel URL (e.g. `https://teach-me-new.vercel.app`) — used in password reset emails
+3. Deploy — Vercel auto-detects Vite + the `api/` folder
+
+## Cloudinary Upload Preset
+
+1. Go to [Cloudinary Upload Presets](https://console.cloudinary.com/app/settings/upload/presets)
+2. Click **Add upload preset** → set to **Unsigned** mode
+3. Copy the preset name into `VITE_CLOUDINARY_UPLOAD_PRESET` in your `.env`
+
 
 
 ## AI Assistant Support
