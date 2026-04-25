@@ -11,7 +11,7 @@ interface ResendResponse {
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
-  const { email } = req.body as { email?: string };
+  const { email, origin } = req.body as { email?: string; origin?: string };
 
   if (!email?.trim() || !email.includes('@')) {
     res.status(400).json({ error: 'A valid email address is required.' });
@@ -29,7 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const siteUrl = process.env.SITE_URL ?? 'http://localhost:5173';
+  // Prefer the env var (set in Vercel dashboard), then the origin sent by the browser, then localhost
+  const siteUrl = process.env.SITE_URL ?? origin ?? 'http://localhost:5173';
 
   const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',

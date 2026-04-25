@@ -24,7 +24,7 @@ export default function ForgotPasswordScreen({ onBack }: Props) {
       const res = await fetch('/api/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmed }),
+        body: JSON.stringify({ email: trimmed, origin: window.location.origin }),
       });
 
       const data = await res.json() as { error?: string };

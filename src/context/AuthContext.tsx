@@ -50,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: { username },
+        // Redirect to wherever the app is actually running (prod or localhost)
+        emailRedirectTo: window.location.origin,
       },
     });
 
