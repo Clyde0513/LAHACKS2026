@@ -4,10 +4,14 @@ import LessonScreen from './screens/LessonScreen';
 import UploadLearnScreen from './screens/UploadLearnScreen';
 import RecapScreen from './screens/RecapScreen';
 import DashboardScreen from './screens/DashboardScreen';
+import AuthScreen from './screens/AuthScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import ResetPasswordScreen from './screens/ResetPasswordScreen';
+import { useAuth } from './context/AuthContext';
 import type { LessonCompletion, Roadmap } from './types';
 import './App.css';
 
-type Screen = 'home' | 'roadmap' | 'lesson' | 'upload' | 'recap' | 'dashboard';
+type Screen = 'home' | 'roadmap' | 'lesson' | 'upload' | 'recap' | 'dashboard' | 'forgot-password' | 'reset-password';
 
 const SUGGESTED_TOPICS = [
   { label: 'Quantum Computing', emoji: '⚛️' },
@@ -41,6 +45,7 @@ const HOW_IT_WORKS = [
 ];
 
 function App() {
+  const { user, loading, signOut } = useAuth();
   const [screen, setScreen]             = useState<Screen>('home');
   const [activeTopic, setActiveTopic]   = useState('');
   const [activeRoadmap, setActiveRoadmap] = useState<Roadmap | null>(null);
@@ -50,6 +55,20 @@ function App() {
   const [topic, setTopic]   = useState('');
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Detect password-recovery redirect (from forgot-password email link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash   = window.location.hash;
+    const isRecovery =
+      params.get('code') != null ||
+      params.get('type') === 'recovery' ||
+      hash.includes('type=recovery');
+    if (isRecovery) {
+      // Use a microtask to avoid calling setState synchronously inside the effect body
+      queueMicrotask(() => setScreen('reset-password'));
+    }
+  }, []);
 
   // Surprise me: pick a random suggested topic
   const handleSurpriseMe = () => {
@@ -125,6 +144,34 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  if (screen === 'reset-password') {
+    return (
+      <ResetPasswordScreen
+        onDone={() => {
+          window.history.replaceState({}, '', '/');
+          setScreen('home');
+        }}
+      />
+    );
+  }
+
+  // ── Auth loading spinner ───────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ width: 36, height: 36, border: '3px solid rgba(124,111,247,0.25)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'tmn-spin 0.7s linear infinite', display: 'inline-block' }} />
+      </div>
+    );
+  }
+
+  // ── Auth gate ─────────────────────────────────────────────────────────────
+  if (!user) {
+    if (screen === 'forgot-password') {
+      return <ForgotPasswordScreen onBack={() => setScreen('home')} />;
+    }
+    return <AuthScreen onForgotPassword={() => setScreen('forgot-password')} />;
+  }
 
   if (screen === 'roadmap') {
     return (
@@ -202,8 +249,15 @@ function App() {
           >
             📸 Upload to Learn
           </button>
-          <button className="tmn-btn-ghost">Sign in</button>
-          <button className="tmn-btn-primary tmn-btn-sm">Continue as guest</button>
+          <span className="tmn-nav-username">
+            {(user.user_metadata?.username as string | undefined) ?? user.email?.split('@')[0] ?? 'Learner'}
+          </span>
+          <button
+            className="tmn-btn-ghost tmn-btn-sm"
+            onClick={() => signOut()}
+          >
+            Sign out
+          </button>
         </div>
       </header>
 
@@ -302,7 +356,7 @@ function App() {
         >
           Pick your first topic
         </button>
-        <p className="tmn-footer-note">No account required &mdash; start in seconds.</p>
+        <p className="tmn-footer-note">Signed in as {user.email}</p>
       </section>
 
       <footer className="tmn-footer">

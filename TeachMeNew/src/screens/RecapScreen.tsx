@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { generateRecap } from '../api/generateRecap';
 import { saveLessonRecord } from '../lib/lessonHistory';
+import { supabase } from '../lib/supabase';
 import type { LessonCompletion, RecapData, RelatedTopic } from '../types';
 import './RecapScreen.css';
 
@@ -114,7 +115,7 @@ export default function RecapScreen({
         // Save to history (once)
         if (!savedRef.current) {
           savedRef.current = true;
-          saveLessonRecord({
+          const record = {
             id:              `${roadmap.topic}-${Date.now()}`,
             topic:           roadmap.topic,
             difficulty:      roadmap.difficulty,
@@ -125,7 +126,27 @@ export default function RecapScreen({
             avgConfidence,
             relatedTopics:   data.relatedTopics,
             uploadedPublicId: completion.uploadedPublicId,
-          });
+          };
+          // Always save locally
+          saveLessonRecord(record);
+          // Also persist to Supabase when logged in
+          if (supabase) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (!session) return;
+              supabase!.from('user_progress').insert({
+                user_id:          session.user.id,
+                topic:            record.topic,
+                difficulty:       record.difficulty,
+                score_pct:        record.quizScore,
+                confidence_low:   responses.filter((r) => r.confidence === 'low').length,
+                confidence_medium: responses.filter((r) => r.confidence === 'medium').length,
+                confidence_high:  responses.filter((r) => r.confidence === 'high').length,
+                completed_at:     new Date(record.completedAt).toISOString(),
+              }).then(({ error }) => {
+                if (error) console.warn('[recap] Supabase save failed:', error.message);
+              });
+            });
+          }
           setSaved(true);
         }
       })

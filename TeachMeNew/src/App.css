@@ -34,6 +34,24 @@
   flex-direction: column;
 }
 
+/* ── Nav username chip ── */
+.tmn-nav-username {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.75rem;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Global spinner keyframe (used by auth screens) ── */
+@keyframes tmn-spin { to { transform: rotate(360deg); } }
+
 /* ─── Nav ─── */
 .tmn-nav {
   position: sticky;

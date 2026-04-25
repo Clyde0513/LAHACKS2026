@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getLessonRecords, removeLessonRecord, clearHistory, calcStreak } from '../lib/lessonHistory';
+import { supabase } from '../lib/supabase';
 import type { LessonRecord } from '../types';
 import './DashboardScreen.css';
 
@@ -26,6 +27,12 @@ function formatRelative(ms: number): string {
   if (days === 1) return 'Yesterday';
   if (days < 7)   return `${days}d ago`;
   return formatDate(ms);
+}
+
+function calcAvgConfidenceFromCounts(low: number, medium: number, high: number): number {
+  const total = low + medium + high;
+  if (!total) return 0;
+  return Math.round(((low * 1 + medium * 2 + high * 3) / (total * 3)) * 100);
 }
 
 // Aggregate confidence per topic for the chart
@@ -132,6 +139,46 @@ interface Props {
 export default function DashboardScreen({ onBack, onStartTopic }: Props) {
   const [records, setRecords] = useState<LessonRecord[]>(() => getLessonRecords());
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // Fetch from Supabase when logged in and merge with localStorage
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data, error } = await supabase!
+        .from('user_progress')
+        .select('id, topic, difficulty, score_pct, completed_at, confidence_low, confidence_medium, confidence_high')
+        .eq('user_id', session.user.id)
+        .order('completed_at', { ascending: false })
+        .limit(50);
+
+      if (error) { console.warn('[dashboard] fetch error:', error.message); return; }
+      if (!data?.length) return;
+
+      const remote: LessonRecord[] = data.map((row) => ({
+        id:            row.id as string,
+        topic:         row.topic as string,
+        difficulty:    (row.difficulty as string) ?? 'Beginner',
+        totalDuration: '',
+        moduleCount:   0,
+        completedAt:   new Date(row.completed_at as string).getTime(),
+        quizScore:     Math.round((row.score_pct as number) ?? 0),
+        avgConfidence: calcAvgConfidenceFromCounts(
+          (row.confidence_low as number) ?? 0,
+          (row.confidence_medium as number) ?? 0,
+          (row.confidence_high as number) ?? 0,
+        ),
+        relatedTopics: [],
+      }));
+
+      // Merge: remote is authoritative for records that exist there
+      const localOnly = getLessonRecords().filter(
+        (local) => !remote.some((r) => r.id === local.id),
+      );
+      setRecords([...remote, ...localOnly]);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const streak      = calcStreak(records);
   const totalLessons = records.length;

@@ -7,6 +7,7 @@ import { generateLessonRoute, simplifyCardRoute, anotherExampleRoute } from './r
 import { analyzeUploadRoute } from './routes/analyzeUpload';
 import { generateRecapRoute } from './routes/generateRecap';
 import { saveProgressRoute } from './routes/saveProgress';
+import { forgotPasswordRoute } from './routes/forgotPassword';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -28,6 +29,7 @@ app.post('/api/another-example',  anotherExampleRoute);
 app.post('/api/analyze-upload',   analyzeUploadRoute);
 app.post('/api/generate-recap',   generateRecapRoute);
 app.post('/api/save-progress',    saveProgressRoute);
+app.post('/api/forgot-password',  forgotPasswordRoute);
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
