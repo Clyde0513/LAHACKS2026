@@ -624,11 +624,41 @@
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .lsn-card { padding: 1.25rem; }
-  .lsn-nav { padding: 0 1rem; }
+  /* Card */
+  .lsn-card { padding: 1.2rem 1.1rem; gap: 1rem; }
+  .lsn-card-title { font-size: clamp(1.15rem, 5vw, 1.5rem); }
+  .lsn-explanation { font-size: 0.93rem; }
+
+  /* Nav */
+  .lsn-nav { padding: 0 0.85rem; }
   .lsn-nav-label { display: none; }
   .lsn-nav { grid-template-columns: auto auto; justify-content: space-between; }
-  .lsn-bar { padding: 0.75rem 1rem; }
-  .lsn-bar-dots { max-width: 180px; }
+
+  /* Bottom bar: safe-area inset + compact layout */
+  .lsn-bar {
+    padding: 0.65rem 0.85rem;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
+    gap: 0.5rem;
+  }
+  .lsn-bar-dots { max-width: 160px; }
+  .lsn-dot { width: 6px; height: 6px; }
+  .lsn-dot-active { width: 14px; }
+  .lsn-bar-prev, .lsn-bar-next, .lsn-bar-finish { font-size: 0.8rem; padding: 0.45rem 0.8rem; }
+
+  /* Key terms: single column on small screen */
   .lsn-terms-grid { grid-template-columns: 1fr; }
+
+  /* Visual image: shorter aspect on very small screens */
+  .lsn-visual-img-wrap { aspect-ratio: 16 / 9; }
+
+  /* Action buttons: wrap but stay centered */
+  .lsn-actions { gap: 0.45rem; }
+  .lsn-action-btn { font-size: 0.78rem; padding: 0.45rem 0.85rem; }
+
+  /* Quiz panel: flush bottom */
+  .lsn-quiz { border-radius: 20px 20px 0 0; padding: 1.25rem; }
+  .lsn-quiz-backdrop { padding: 0; align-items: flex-end; }
 }
+
+/* Prevent bottom bar from covering safe area on tall phones */
+.lsn-root { padding-bottom: max(72px, calc(72px + env(safe-area-inset-bottom))); }

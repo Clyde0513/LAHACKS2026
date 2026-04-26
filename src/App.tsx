@@ -238,25 +238,28 @@ function App() {
         </div>
         <div className="tmn-nav-actions">
           <button
-            className="tmn-btn-ghost tmn-btn-sm"
+            className="tmn-btn-ghost tmn-btn-sm tmn-nav-btn"
             onClick={() => setScreen('dashboard')}
           >
-            📊 Dashboard
+            <span aria-hidden="true">📊</span>
+            <span className="tmn-nav-btn-label">Dashboard</span>
           </button>
           <button
-            className="tmn-btn-ghost tmn-btn-sm"
+            className="tmn-btn-ghost tmn-btn-sm tmn-nav-btn"
             onClick={() => setScreen('upload')}
           >
-            📸 Upload to Learn
+            <span aria-hidden="true">📸</span>
+            <span className="tmn-nav-btn-label">Upload to Learn</span>
           </button>
           <span className="tmn-nav-username">
             {(user.user_metadata?.username as string | undefined) ?? user.email?.split('@')[0] ?? 'Learner'}
           </span>
           <button
-            className="tmn-btn-ghost tmn-btn-sm"
+            className="tmn-btn-ghost tmn-btn-sm tmn-nav-btn"
             onClick={() => signOut()}
           >
-            Sign out
+            <span className="tmn-nav-btn-label">Sign out</span>
+            <span className="tmn-nav-btn-icon-only" aria-hidden="true">↩</span>
           </button>
         </div>
       </header>

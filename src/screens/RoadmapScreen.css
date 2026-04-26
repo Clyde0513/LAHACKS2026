@@ -360,6 +360,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 2rem;
+  /* iOS safe-area inset for home indicator */
+  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
   background: rgba(13, 13, 20, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -424,8 +426,34 @@
   .rmn-bar {
     flex-direction: column;
     align-items: stretch;
-    padding: 1rem 1.25rem;
+    padding: 0.85rem 1.25rem;
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+    gap: 0.65rem;
   }
-  .rmn-bar-secondary { justify-content: center; }
-  .rmn-bar-start { width: 100%; display: flex; justify-content: center; }
+  .rmn-bar-secondary {
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .rmn-bar-start {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Difficulty picker: horizontally scrollable on small screens */
+  .rmn-diff-picker {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .rmn-diff-picker::-webkit-scrollbar { display: none; }
+
+  /* Modules: remove hover translate on touch to avoid sticky-hover */
+  .rmn-module-card:not(.rmn-module-skel):hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
 }

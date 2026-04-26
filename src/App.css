@@ -336,7 +336,7 @@
 }
 .tmn-surprise-icon { font-size: 1rem; }
 
-/* ─── How it works ─── */
+/* ── How it works ─── */
 .tmn-how {
   background: var(--surface);
   border-top: 1px solid var(--border);
@@ -437,6 +437,41 @@
   .tmn-search-form { flex-wrap: wrap; border-radius: var(--radius-md); }
   .tmn-search-submit { width: 100%; justify-content: center; border-radius: var(--radius-sm); }
   .tmn-how-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Nav button icon/label split (for mobile icon-only nav) ── */
+.tmn-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tmn-nav-btn-icon-only {
+  display: none;
+}
+
+/* ── Mobile nav: collapse labels, hide username, show icon-only ── */
+@media (max-width: 640px) {
+  .tmn-nav { padding: 0 1rem; height: 54px; }
+  .tmn-nav-actions { gap: 0.3rem; }
+  .tmn-nav-btn-label { display: none; }
+  .tmn-nav-btn-icon-only { display: inline; }
+  .tmn-nav-username { display: none; }
+  .tmn-btn-sm { padding: 0.4rem 0.65rem; }
+  /* Keep the hero padding reasonable */
+  .tmn-hero { padding: 3rem 1.25rem 3rem; }
+  .tmn-headline { letter-spacing: -0.02em; }
+  /* Chips: smaller gap on mobile */
+  .tmn-chips-row { gap: 0.35rem; }
+  .tmn-chip { padding: 0.32rem 0.7rem; font-size: 0.78rem; }
+}
+
+/* ── Touch devices: remove hover transforms that feel wrong on tap ── */
+@media (hover: none) and (pointer: coarse) {
+  .tmn-chip:hover { transform: none; }
+  .tmn-how-card:hover { transform: none; }
+  .tmn-btn-primary:hover:not(:disabled) { transform: none; }
+  .tmn-surprise-btn:hover { transform: none; }
 }
 
 .prompts-intro {

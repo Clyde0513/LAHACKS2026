@@ -405,10 +405,23 @@
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
-  .rcp-scores    { gap: 1.5rem; padding: 1.25rem; }
-  .rcp-ring-wrap { width: 80px; height: 80px; }
-  .rcp-ring-pct  { font-size: 1.1rem; }
-  .rcp-two-col   { grid-template-columns: 1fr; }
-  .rcp-actions   { flex-direction: column; }
-  .rcp-home-btn  { width: 100%; }
+  /* Scores section: compact rings */
+  .rcp-scores    { gap: 1.25rem; padding: 1.1rem 1rem; }
+  .rcp-ring-wrap { width: 78px; height: 78px; }
+  .rcp-ring-pct  { font-size: 1.05rem; }
+  .rcp-ring-label { font-size: 0.58rem; }
+  .rcp-scores-divider { height: 52px; }
+
+  /* Layout */
+  .rcp-two-col { grid-template-columns: 1fr; }
+
+  /* Actions: stack vertically */
+  .rcp-actions { flex-direction: column; gap: 0.5rem; }
+  .rcp-home-btn { width: 100%; justify-content: center; }
+  .rcp-save-btn, .rcp-restart-btn, .rcp-share-btn { width: 100%; justify-content: center; }
+
+  /* Main padding */
+  .rcp-main { padding: 2rem 1rem 4rem; }
+  .rcp-hero { padding: 1.5rem 0.5rem 0.5rem; }
+  .rcp-topic { font-size: clamp(1.4rem, 7vw, 2rem); }
 }
