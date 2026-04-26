@@ -86,6 +86,8 @@ function App() {
     e.preventDefault();
     if (!topic.trim()) return;
     setActiveTopic(topic.trim());
+    // Clear any previously uploaded image so it doesn't bleed into typed-topic lessons
+    setUploadedPublicId(undefined);
     setScreen('roadmap');
   };
 

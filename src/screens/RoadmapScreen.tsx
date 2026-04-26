@@ -148,7 +148,6 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
                   <span className="rmn-badge rmn-badge-diff" style={{ color: diffColor(roadmap.difficulty) }}>
                     {DIFFICULTIES.find((d) => d.label === roadmap.difficulty)?.emoji ?? '🔵'}{' '}{roadmap.difficulty}
                   </span>
-                  <span className="rmn-badge rmn-badge-dur">⏱ {roadmap.totalDuration}</span>
                   <span className="rmn-badge rmn-badge-mods">
                     📚 {roadmap.modules?.length ?? 0} modules
                   </span>
@@ -207,7 +206,6 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
                           <Skel w="48%" h="0.95rem" />
                           <Skel w="76%" h="0.8rem" />
                         </div>
-                        <div className="rmn-skel rmn-skel-dur" />
                       </div>
                     ))
                   : roadmap
@@ -219,7 +217,6 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
                           <div className="rmn-module-title">{mod.title}</div>
                           <div className="rmn-module-desc">{mod.description}</div>
                         </div>
-                        <div className="rmn-module-dur">{mod.duration}</div>
                       </div>
                     ))
                   : null}
