@@ -59,6 +59,30 @@ function App() {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // ── Logo: generated once via DALL-E, cached in localStorage forever ─────
+  const LOGO_KEY = 'tmn-logo-url-v1';
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem(LOGO_KEY));
+
+  useEffect(() => {
+    if (logoUrl) return; // already have one
+    fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        keyword:
+          'glowing crystalline star prism icon dark navy background purple violet gradient bokeh minimal clean logo mark',
+      }),
+    })
+      .then((r) => r.json())
+      .then((d: { url?: string }) => {
+        if (d.url) {
+          localStorage.setItem(LOGO_KEY, d.url);
+          setLogoUrl(d.url);
+        }
+      })
+      .catch(() => {}); // fail silently, no logo is fine
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Detect password-recovery redirect (from forgot-password email link)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -288,6 +312,12 @@ function App() {
         <div className="tmn-glow tmn-glow-2" aria-hidden="true" />
 
         <div className="tmn-hero-content">
+          {logoUrl && (
+            <div className="tmn-logo-mark-wrap">
+              <img src={logoUrl} alt="TeachMeNew logo" className="tmn-logo-mark" />
+              <div className="tmn-logo-mark-glow" aria-hidden="true" />
+            </div>
+          )}
           <div className="tmn-badge">AI-powered learning</div>
           <h1 className="tmn-headline">
             What do you want<br />to <span className="tmn-headline-accent">learn today?</span>

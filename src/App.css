@@ -181,6 +181,41 @@
   gap: 1.5rem;
 }
 
+/* Logo mark */
+.tmn-logo-mark-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 0.25rem;
+}
+
+.tmn-logo-mark {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  object-fit: cover;
+  border: 1px solid rgba(124, 111, 247, 0.25);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.4);
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.tmn-logo-mark-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,111,247,0.35) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: tmn-pulse 3s ease-in-out infinite;
+}
+
+@keyframes tmn-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
+
 /* Badge */
 .tmn-badge {
   display: inline-flex;
