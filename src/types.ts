@@ -33,6 +33,8 @@ export interface LessonCard {
   quizOptions: string[];
   quizCorrectIndex: number;
   quizExplanation: string;
+  /** 2–4 word visual keyword for Cloudinary contextual image (e.g. "neural network diagram") */
+  imageKeyword?: string;
 }
 
 export interface Lesson {

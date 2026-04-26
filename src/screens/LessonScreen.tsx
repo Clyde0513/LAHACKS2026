@@ -145,36 +145,66 @@ function QuizOverlay({ card, onClose }: QuizProps) {
 }
 
 // ── Card visual using Cloudinary ──────────────────────────────────────────────
-interface VisualProps {
-  cardIndex: number;
-  uploadedPublicId?: string;
-  moduleTitle: string;
-}
-function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle }: VisualProps) {
-  const [imgError, setImgError] = useState(false);
-  const publicId = uploadedPublicId ?? sampleForCard(cardIndex);
-
-  // Build the Cloudinary image: smart-crop + AI-enhance + module title overlay
-  const cldImg = cld
-    .image(publicId)
-    .resize(fill().width(700).height(320).gravity(autoGravity()))
-    .adjust(improve());
-
-  // Overlay the module title on sample images (not on user uploads)
-  if (!uploadedPublicId) {
-    const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '…' : moduleTitle;
-    cldImg.overlay(
+// Cloudinary fetch delivery: proxy any public URL through Cloudinary CDN,
+// applying transformations (crop, enhance, overlay) + f_auto/q_auto —
+// without uploading to your account. Result is cached on Cloudinary's edge.
+function buildVisualImage(
+  cardIndex: number,
+  uploadedPublicId: string | undefined,
+  moduleTitle: string,
+  imageKeyword: string | undefined,
+) {
+  const addOverlay = (img: ReturnType<typeof cld.image>, label: string) =>
+    img.overlay(
       overlaySource(
         textSource(label, new TextStyle('Arial', 24).fontWeight('bold')).textColor('white'),
       ).position(new Position().gravity(compass('south_west')).offsetX(16).offsetY(14)),
     );
+
+  const withDelivery = (img: ReturnType<typeof cld.image>) =>
+    img.delivery(format(auto())).delivery(quality(autoQuality()));
+
+  if (uploadedPublicId) {
+    return withDelivery(
+      cld.image(uploadedPublicId)
+        .resize(fill().width(700).height(320).gravity(autoGravity()))
+        .adjust(improve()),
+    );
   }
 
-  cldImg
-    .delivery(format(auto()))
-    .delivery(quality(autoQuality()));
+  if (imageKeyword) {
+    // Cloudinary fetch: pull a contextually relevant image from Unsplash by keyword
+    const unsplashUrl = `https://source.unsplash.com/featured/700x320/?${encodeURIComponent(imageKeyword)}`;
+    const img = cld.image(unsplashUrl)
+      .setDeliveryType('fetch')
+      .resize(fill().width(700).height(320).gravity(autoGravity()))
+      .adjust(improve());
+    const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '\u2026' : moduleTitle;
+    return withDelivery(addOverlay(img, label));
+  }
 
-  if (imgError) return null;
+  // Fallback: static Cloudinary sample (always works, no external fetch needed)
+  const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '\u2026' : moduleTitle;
+  return withDelivery(
+    addOverlay(
+      cld.image(sampleForCard(cardIndex))
+        .resize(fill().width(700).height(320).gravity(autoGravity()))
+        .adjust(improve()),
+      label,
+    ),
+  );
+}
+
+interface VisualProps {
+  cardIndex: number;
+  uploadedPublicId?: string;
+  moduleTitle: string;
+  imageKeyword?: string;
+}
+function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle, imageKeyword }: VisualProps) {
+  const [imgError, setImgError] = useState(false);
+
+  const cldImg = buildVisualImage(cardIndex, uploadedPublicId, moduleTitle, imgError ? undefined : imageKeyword);
 
   return (
     <div className="lsn-visual-img-wrap">
@@ -339,8 +369,13 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
             <span>{card.moduleTitle}</span>
           </div>
 
-          {/* Cloudinary visual — smart-cropped + AI-enhanced + module title overlay */}
-          <ConceptVisual cardIndex={cardIndex} uploadedPublicId={uploadedPublicId} moduleTitle={card.moduleTitle} />
+          {/* Cloudinary visual — contextual image fetched via Cloudinary + smart-crop + AI-enhance */}
+          <ConceptVisual
+            cardIndex={cardIndex}
+            uploadedPublicId={uploadedPublicId}
+            moduleTitle={card.moduleTitle}
+            imageKeyword={card.imageKeyword}
+          />
 
           {/* Concept title */}
           <h1 className="lsn-card-title" style={{ color: grad.accent }}>{card.title}</h1>

@@ -32,6 +32,7 @@ Return ONLY this JSON structure:
       "title": "Concept Title (concise, 3-6 words)",
       "explanation": "2-3 sentence clear explanation a beginner can grasp immediately.",
       "analogy": "A vivid real-world analogy that makes this concept click. Start with 'Think of it like...'",
+      "imageKeyword": "2-4 words describing a vivid photo that visually represents this concept (e.g. 'neural network diagram', 'dna double helix', 'solar panels rooftop')",
       "keyTerms": [
         { "term": "Term", "definition": "Plain-language definition in one sentence." }
       ],
@@ -49,7 +50,8 @@ Rules:
 - quizCorrectIndex: 0-3 (index of the correct option in quizOptions)
 - Vary the quizCorrectIndex — don't always use 0
 - Keep explanations under 60 words
-- Keep analogies under 50 words`;
+- Keep analogies under 50 words
+- imageKeyword: 2-4 words, concrete and visual (not abstract), suitable as a photo search query`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
