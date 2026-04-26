@@ -495,7 +495,7 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
 
       {/* ── Checkpoint quiz overlay ─────────────────────────────────────── */}
       {checkpoint && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, overflowY: 'auto', background: 'var(--bg)' }}>
           <CheckpointQuizScreen
             data={checkpoint}
             onContinue={(responses: QuizResponse[]) => {
