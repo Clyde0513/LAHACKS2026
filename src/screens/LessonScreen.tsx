@@ -11,7 +11,7 @@ import { TextStyle } from '@cloudinary/url-gen/qualifiers/textStyle';
 import { Position } from '@cloudinary/url-gen/qualifiers/position';
 import { improve } from '@cloudinary/url-gen/actions/adjust';
 import { cld } from '../cloudinary/config';
-import { generateLesson, simplifyCard, anotherExample } from '../api/generateLesson';
+import { generateLesson, simplifyCard, anotherExample, generateDeepDive } from '../api/generateLesson';
 import type { CheckpointData, Lesson, LessonCard, QuizResponse, Roadmap } from '../types';
 import CheckpointQuizScreen from './CheckpointQuizScreen';
 import './LessonScreen.css';
@@ -47,6 +47,14 @@ function cardGradient(index: number) {
 function sampleForCard(index: number) {
   return VISUAL_SAMPLES[index % VISUAL_SAMPLES.length];
 }
+
+// Deep-dive uses a purple/indigo gradient family to visually distinguish from main lesson cards
+const DEEP_DIVE_GRADS = [
+  { from: '#1a0533', to: '#2d0f5a', accent: '#e879f9' },
+  { from: '#0c1a3a', to: '#1a2d5a', accent: '#818cf8' },
+  { from: '#0d1f16', to: '#1a3329', accent: '#34d399' },
+];
+function ddGrad(i: number) { return DEEP_DIVE_GRADS[i % DEEP_DIVE_GRADS.length]; }
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 function LoadingSkeleton() {
@@ -226,6 +234,132 @@ function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle, imageKeyword 
   );
 }
 
+// ── Deep Dive overlay ─────────────────────────────────────────────────────────
+interface DeepDiveProps {
+  cards: LessonCard[];
+  parentTitle: string;
+  uploadedPublicId?: string;
+  onBack: () => void;
+}
+function DeepDiveOverlay({ cards, parentTitle, uploadedPublicId, onBack }: DeepDiveProps) {
+  const [idx, setIdx]         = useState(0);
+  const [animDir, setAnimDir] = useState<'left' | 'right'>('left');
+  const [animKey, setAnimKey] = useState(0);
+  const [quizOpen, setQuizOpen] = useState(false);
+
+  const card   = cards[idx];
+  const grad   = ddGrad(idx);
+  const isLast = idx === cards.length - 1;
+
+  const nav = (dir: 'prev' | 'next') => {
+    const next = dir === 'next' ? idx + 1 : idx - 1;
+    if (next < 0 || next >= cards.length) return;
+    setAnimDir(dir === 'next' ? 'left' : 'right');
+    setAnimKey((k) => k + 1);
+    setIdx(next);
+  };
+
+  return (
+    <div className="lsn-dd-wrap">
+      {/* Header */}
+      <header className="lsn-dd-nav">
+        <button className="tmn-btn-ghost lsn-dd-back" onClick={onBack}>← Back</button>
+        <div className="lsn-dd-header-center">
+          <span className="lsn-dd-badge">⬇ Deep Dive</span>
+          <span className="lsn-dd-parent">{parentTitle}</span>
+        </div>
+        <span className="lsn-dd-counter">{idx + 1} / {cards.length}</span>
+      </header>
+
+      {/* Sub-card */}
+      <main className="lsn-main">
+        <div
+          key={animKey}
+          className={`lsn-card lsn-anim-${animDir} lsn-dd-card`}
+          style={{
+            background: `linear-gradient(160deg, ${grad.from} 0%, ${grad.to} 100%)`,
+            borderColor: `${grad.accent}33`,
+          }}
+        >
+          <div className="lsn-module-tag">
+            <span>{card.moduleIcon}</span>
+            <span>{card.moduleTitle} · Deep Dive</span>
+          </div>
+
+          <ConceptVisual
+            cardIndex={idx + 100}
+            uploadedPublicId={uploadedPublicId}
+            moduleTitle={card.title}
+            imageKeyword={card.imageKeyword}
+          />
+
+          <h1 className="lsn-card-title" style={{ color: grad.accent }}>{card.title}</h1>
+          <p className="lsn-explanation">{card.explanation}</p>
+
+          <div className="lsn-analogy-block">
+            <span className="lsn-analogy-icon">💡</span>
+            <p className="lsn-analogy-text">{card.analogy}</p>
+          </div>
+
+          <div className="lsn-terms">
+            <h3 className="lsn-terms-label">Key terms</h3>
+            <dl className="lsn-terms-grid">
+              {card.keyTerms.map((kt) => (
+                <div key={kt.term} className="lsn-term-item">
+                  <dt className="lsn-term-word" style={{ color: grad.accent }}>{kt.term}</dt>
+                  <dd className="lsn-term-def">{kt.definition}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+
+        <div className="lsn-actions">
+          <button
+            className="lsn-action-btn lsn-action-quiz"
+            onClick={() => setQuizOpen(true)}
+            title="Test your understanding"
+          >
+            ❓ Quiz me
+          </button>
+        </div>
+      </main>
+
+      {/* Bottom nav bar — reuses .lsn-bar (position: fixed) */}
+      <div className="lsn-bar">
+        <button
+          className="tmn-btn-ghost lsn-bar-prev"
+          onClick={() => nav('prev')}
+          disabled={idx === 0}
+        >
+          ← Previous
+        </button>
+        <div className="lsn-bar-dots">
+          {cards.map((_, i) => (
+            <button
+              key={i}
+              className={`lsn-dot${i === idx ? ' lsn-dot-active' : ''}${i < idx ? ' lsn-dot-done' : ''}`}
+              onClick={() => {
+                setAnimDir(i > idx ? 'left' : 'right');
+                setAnimKey((k) => k + 1);
+                setIdx(i);
+              }}
+              aria-label={`Deep dive card ${i + 1}`}
+            />
+          ))}
+        </div>
+        {isLast ? (
+          <button className="tmn-btn-primary lsn-bar-finish" onClick={onBack}>Done ✓</button>
+        ) : (
+          <button className="tmn-btn-primary lsn-bar-next" onClick={() => nav('next')}>Next →</button>
+        )}
+      </div>
+
+      {quizOpen && <QuizOverlay card={card} onClose={() => setQuizOpen(false)} />}
+    </div>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 interface Props {
   roadmap: Roadmap;
@@ -251,6 +385,8 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
   const [overrideCard, setOverrideCard]   = useState<Partial<LessonCard> | null>(null);
   const [checkpoint, setCheckpoint]       = useState<CheckpointData | null>(null);
   const [allResponses, setAllResponses]   = useState<QuizResponse[]>([]);
+  const [deepDive, setDeepDive]           = useState<{ cards: LessonCard[]; parentTitle: string } | null>(null);
+  const [deepDiveLoading, setDeepDiveLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // ── Load lesson ─────────────────────────────────────────────────────────────
@@ -344,6 +480,19 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
       // silently keep original
     } finally {
       setCardAction(null);
+    }
+  };
+
+  const handleDiveDeeper = async () => {
+    if (deepDiveLoading || cardAction) return;
+    setDeepDiveLoading(true);
+    try {
+      const cards = await generateDeepDive(baseCard);
+      setDeepDive({ cards, parentTitle: card.title });
+    } catch {
+      // silently fail — main lesson unaffected
+    } finally {
+      setDeepDiveLoading(false);
     }
   };
 
@@ -445,6 +594,14 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
           >
             ❓ Quiz me
           </button>
+          <button
+            className={`lsn-action-btn lsn-action-dive${deepDiveLoading ? ' lsn-action-busy' : ''}`}
+            onClick={handleDiveDeeper}
+            disabled={!!cardAction || deepDiveLoading}
+            title="Explore this concept in more depth"
+          >
+            {deepDiveLoading ? '⏳' : '🔬'} {deepDiveLoading ? 'Loading…' : 'Dive deeper'}
+          </button>
         </div>
       </main>
 
@@ -509,6 +666,24 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
             }}
             onReview={() => setCheckpoint(null)}
           />
+        </div>
+      )}
+
+      {/* ── Deep Dive overlay ───────────────────────────────────────────── */}
+      {(deepDiveLoading || deepDive) && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 150, overflowY: 'auto', background: 'var(--bg)' }}>
+          {deepDiveLoading ? (
+            <div className="lsn-dd-loading">
+              <p className="lsn-loading-label">🔬 Diving deeper into "{card.title}"…</p>
+            </div>
+          ) : deepDive ? (
+            <DeepDiveOverlay
+              cards={deepDive.cards}
+              parentTitle={deepDive.parentTitle}
+              uploadedPublicId={uploadedPublicId}
+              onBack={() => setDeepDive(null)}
+            />
+          ) : null}
         </div>
       )}
     </div>

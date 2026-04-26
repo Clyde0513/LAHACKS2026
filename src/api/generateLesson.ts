@@ -26,3 +26,8 @@ export async function anotherExample(card: LessonCard): Promise<string> {
   return data.analogy;
 }
 
+export async function generateDeepDive(card: LessonCard): Promise<LessonCard[]> {
+  const data = await post<{ cards: LessonCard[] }>('/api/deep-dive', { card });
+  return data.cards;
+}
+

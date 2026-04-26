@@ -300,6 +300,101 @@
   color: #fb923c;
 }
 
+/* Dive deeper — magenta/purple tint */
+.lsn-action-dive {
+  border-color: rgba(232, 121, 249, 0.3);
+  color: #e879f9;
+}
+.lsn-action-dive:hover:not(:disabled) {
+  background: rgba(232, 121, 249, 0.08);
+  border-color: rgba(232, 121, 249, 0.5);
+  color: #e879f9;
+}
+
+/* ── Deep Dive overlay ──────────────────────────────────────────────────── */
+.lsn-dd-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* room for fixed .lsn-bar at bottom */
+  padding-bottom: max(72px, calc(72px + env(safe-area-inset-bottom)));
+}
+
+.lsn-dd-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  height: 56px;
+  background: rgba(13, 13, 20, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(232, 121, 249, 0.15);
+}
+
+.lsn-dd-back {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  white-space: nowrap;
+}
+
+.lsn-dd-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.lsn-dd-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #e879f9;
+  background: rgba(232, 121, 249, 0.1);
+  border: 1px solid rgba(232, 121, 249, 0.25);
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+}
+
+.lsn-dd-parent {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 26ch;
+}
+
+.lsn-dd-counter {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Subtle glow on deep-dive cards to distinguish them */
+.lsn-dd-card {
+  box-shadow: 0 0 48px rgba(232, 121, 249, 0.07), 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Loading state inside the overlay (before cards arrive) */
+.lsn-dd-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+@media (max-width: 600px) {
+  .lsn-dd-nav { padding: 0 0.85rem; }
+  .lsn-dd-parent { max-width: 14ch; }
+}
+
 /* ── Bottom nav bar ─────────────────────────────────────────────────────── */
 .lsn-bar {
   position: fixed;
