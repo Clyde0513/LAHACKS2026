@@ -49,7 +49,10 @@ function App() {
   const [screen, setScreen]             = useState<Screen>('home');
   const [activeTopic, setActiveTopic]   = useState('');
   const [activeRoadmap, setActiveRoadmap] = useState<Roadmap | null>(null);
+  // uploadedPublicId: set ONLY by UploadLearnScreen and consumed when the lesson starts.
+  // lessonPublicId:   the ID actually in use for the current lesson (snapshot at lesson start).
   const [uploadedPublicId, setUploadedPublicId] = useState<string | undefined>();
+  const [lessonPublicId, setLessonPublicId]     = useState<string | undefined>();
   const [activeCompletion, setActiveCompletion] = useState<LessonCompletion | null>(null);
 
   const [topic, setTopic]   = useState('');
@@ -92,10 +95,15 @@ function App() {
   };
 
   const handleBackToHome = () => {
+    setUploadedPublicId(undefined);
     setScreen('home');
   };
 
   const handleStartLesson = (roadmap: Roadmap) => {
+    // Snapshot the upload ID for this lesson, then immediately wipe the
+    // global state so no future lesson can accidentally inherit it.
+    setLessonPublicId(uploadedPublicId);
+    setUploadedPublicId(undefined);
     setActiveRoadmap(roadmap);
     setScreen('lesson');
   };
@@ -108,7 +116,8 @@ function App() {
 
   const handleFinishLesson = (responses: import('./types').QuizResponse[]) => {
     if (activeRoadmap) {
-      setActiveCompletion({ roadmap: activeRoadmap, responses, uploadedPublicId });
+      setActiveCompletion({ roadmap: activeRoadmap, responses, uploadedPublicId: lessonPublicId });
+      setLessonPublicId(undefined);
       setScreen('recap');
     } else {
       setScreen('home');
@@ -120,6 +129,7 @@ function App() {
     setActiveTopic('');
     setActiveRoadmap(null);
     setUploadedPublicId(undefined);
+    setLessonPublicId(undefined);
     setActiveCompletion(null);
   };
 
@@ -127,12 +137,15 @@ function App() {
     setActiveTopic(topic);
     setActiveRoadmap(null);
     setUploadedPublicId(undefined);
+    setLessonPublicId(undefined);
     setActiveCompletion(null);
     setScreen('roadmap');
   };
 
   const handleRecapRestart = () => {
     if (!activeCompletion) { setScreen('home'); return; }
+    // Restore the upload ID so the restarted lesson keeps the same photo
+    setLessonPublicId(activeCompletion.uploadedPublicId);
     setActiveRoadmap(activeCompletion.roadmap);
     setActiveCompletion(null);
     setScreen('lesson');
@@ -191,7 +204,7 @@ function App() {
         roadmap={activeRoadmap}
         onBack={() => setScreen('roadmap')}
         onFinish={handleFinishLesson}
-        uploadedPublicId={uploadedPublicId}
+        uploadedPublicId={lessonPublicId}
       />
     );
   }
@@ -215,6 +228,8 @@ function App() {
         onStartTopic={(topic) => {
           setActiveTopic(topic);
           setActiveRoadmap(null);
+          setUploadedPublicId(undefined);
+          setLessonPublicId(undefined);
           setScreen('roadmap');
         }}
       />
