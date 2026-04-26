@@ -182,11 +182,10 @@ function buildVisualImage(
   }
 
   if (generatedUrl) {
-    // DALL-E 3 generated image via Cloudinary fetch delivery
+    // DALL-E 3 is the AI — Cloudinary only resizes + optimizes delivery (no improve/autoGravity needed)
     const img = cld.image(generatedUrl)
       .setDeliveryType('fetch')
-      .resize(fill().width(700).height(320).gravity(autoGravity()))
-      .adjust(improve());
+      .resize(fill().width(700).height(320));
     const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '\u2026' : moduleTitle;
     return withDelivery(addOverlay(img, label));
   }
