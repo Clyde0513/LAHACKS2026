@@ -11,7 +11,7 @@ import { TextStyle } from '@cloudinary/url-gen/qualifiers/textStyle';
 import { Position } from '@cloudinary/url-gen/qualifiers/position';
 import { improve } from '@cloudinary/url-gen/actions/adjust';
 import { cld } from '../cloudinary/config';
-import { generateLesson, simplifyCard, anotherExample, generateDeepDive } from '../api/generateLesson';
+import { generateLesson, simplifyCard, anotherExample, generateDeepDive, generateCardImage } from '../api/generateLesson';
 import type { CheckpointData, Lesson, LessonCard, QuizResponse, Roadmap } from '../types';
 import CheckpointQuizScreen from './CheckpointQuizScreen';
 import './LessonScreen.css';
@@ -153,14 +153,15 @@ function QuizOverlay({ card, onClose }: QuizProps) {
 }
 
 // ── Card visual using Cloudinary ──────────────────────────────────────────────
-// Cloudinary fetch delivery: proxy any public URL through Cloudinary CDN,
-// applying transformations (crop, enhance, overlay) + f_auto/q_auto —
-// without uploading to your account. Result is cached on Cloudinary's edge.
+// Priority: user upload → DALL-E generated → Picsum placeholder → static sample
+// DALL-E and Picsum URLs are delivered via Cloudinary fetch delivery for CDN
+// caching, f_auto/q_auto, and smart-crop transformations.
 function buildVisualImage(
   cardIndex: number,
   uploadedPublicId: string | undefined,
   moduleTitle: string,
   imageKeyword: string | undefined,
+  generatedUrl: string | undefined,
 ) {
   const addOverlay = (img: ReturnType<typeof cld.image>, label: string) =>
     img.overlay(
@@ -180,14 +181,23 @@ function buildVisualImage(
     );
   }
 
+  if (generatedUrl) {
+    // DALL-E 3 generated image via Cloudinary fetch delivery
+    const img = cld.image(generatedUrl)
+      .setDeliveryType('fetch')
+      .resize(fill().width(700).height(320).gravity(autoGravity()))
+      .adjust(improve());
+    const label = moduleTitle.length > 36 ? moduleTitle.slice(0, 34) + '\u2026' : moduleTitle;
+    return withDelivery(addOverlay(img, label));
+  }
+
   if (imageKeyword) {
-    // Use Picsum Photos seeded by keyword hash + cardIndex for deterministic,
-    // beautiful, varied images — no loremflickr which returns noisy Flickr results.
-    // Different seeds → different photos per card; reproducible per reload.
+    // Picsum Photos — deterministic placeholder while DALL-E generates,
+    // or permanent fallback if DALL-E fails.
     const seed = imageKeyword
       .split('')
       .reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, cardIndex * 2654435761);
-    const picId = Math.abs(seed) % 1000; // Picsum has ~1000 curated photos
+    const picId = Math.abs(seed) % 1000;
     const fetchUrl = `https://picsum.photos/seed/${picId}/700/320`;
     const img = cld.image(fetchUrl)
       .setDeliveryType('fetch')
@@ -214,11 +224,21 @@ interface VisualProps {
   uploadedPublicId?: string;
   moduleTitle: string;
   imageKeyword?: string;
+  generatedUrl?: string;
 }
-function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle, imageKeyword }: VisualProps) {
-  const [imgError, setImgError] = useState(false);
+function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle, imageKeyword, generatedUrl }: VisualProps) {
+  // fallbackLevel: 0 = try generatedUrl, 1 = skip generatedUrl (try Picsum), 2 = skip all external
+  const [fallbackLevel, setFallbackLevel] = useState(0);
 
-  const cldImg = buildVisualImage(cardIndex, uploadedPublicId, moduleTitle, imgError ? undefined : imageKeyword);
+  const cldImg = buildVisualImage(
+    cardIndex,
+    uploadedPublicId,
+    moduleTitle,
+    fallbackLevel < 2 ? imageKeyword : undefined,
+    fallbackLevel < 1 ? generatedUrl : undefined,
+  );
+
+  const isDalle = !!generatedUrl && fallbackLevel < 1;
 
   return (
     <div className="lsn-visual-img-wrap">
@@ -227,9 +247,9 @@ function ConceptVisual({ cardIndex, uploadedPublicId, moduleTitle, imageKeyword 
         plugins={[placeholder({ mode: 'blur' }), lazyload()]}
         alt={moduleTitle}
         className="lsn-visual-img"
-        onError={() => setImgError(true)}
+        onError={() => setFallbackLevel((l) => Math.min(l + 1, 2))}
       />
-      <span className="lsn-visual-badge">✦ Cloudinary AI</span>
+      <span className="lsn-visual-badge">{isDalle ? '✦ DALL·E 3' : '✦ Cloudinary AI'}</span>
     </div>
   );
 }
@@ -387,6 +407,8 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
   const [allResponses, setAllResponses]   = useState<QuizResponse[]>([]);
   const [deepDive, setDeepDive]           = useState<{ cards: LessonCard[]; parentTitle: string } | null>(null);
   const [deepDiveLoading, setDeepDiveLoading] = useState(false);
+  const [cardImages, setCardImages]         = useState<Record<number, string>>({});
+  const imageRequestedRef = useRef(new Set<number>());
   const cardRef = useRef<HTMLDivElement>(null);
 
   // ── Load lesson ─────────────────────────────────────────────────────────────
@@ -397,6 +419,21 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
       .catch((e: Error) => { if (!cancelled) setStatus({ kind: 'error', message: e.message }); });
     return () => { cancelled = true; };
   }, [roadmap]);
+
+  // ── DALL-E image generation — current card + prefetch next ──────────────────
+  useEffect(() => {
+    if (status.kind !== 'ready') return;
+    const { lesson } = status;
+    [cardIndex, cardIndex + 1].forEach((idx) => {
+      if (idx >= lesson.cards.length) return;
+      const c = lesson.cards[idx];
+      if (!c.imageKeyword || imageRequestedRef.current.has(idx)) return;
+      imageRequestedRef.current.add(idx);
+      generateCardImage(c.imageKeyword)
+        .then((url) => setCardImages((prev) => ({ ...prev, [idx]: url })))
+        .catch(() => {}); // Picsum remains as fallback
+    });
+  }, [cardIndex, status]);
 
   if (status.kind === 'loading') {
     return (
@@ -524,12 +561,15 @@ export default function LessonScreen({ roadmap, onBack, onFinish, uploadedPublic
             <span>{card.moduleTitle}</span>
           </div>
 
-          {/* Cloudinary visual — contextual image fetched via Cloudinary + smart-crop + AI-enhance */}
+          {/* Cloudinary visual — DALL-E 3 generated + Cloudinary smart-crop + AI-enhance */}
+          {/* key includes generatedUrl so ConceptVisual remounts (resetting fallbackLevel) when DALL-E image arrives */}
           <ConceptVisual
+            key={cardImages[cardIndex] ?? `loading-${cardIndex}`}
             cardIndex={cardIndex}
             uploadedPublicId={uploadedPublicId}
             moduleTitle={card.moduleTitle}
             imageKeyword={card.imageKeyword}
+            generatedUrl={cardImages[cardIndex]}
           />
 
           {/* Concept title */}

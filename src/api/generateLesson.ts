@@ -31,3 +31,8 @@ export async function generateDeepDive(card: LessonCard): Promise<LessonCard[]> 
   return data.cards;
 }
 
+export async function generateCardImage(keyword: string): Promise<string> {
+  const data = await post<{ url: string }>('/api/generate-image', { keyword });
+  return data.url;
+}
+
