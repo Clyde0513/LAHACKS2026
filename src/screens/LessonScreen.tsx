@@ -173,9 +173,11 @@ function buildVisualImage(
   }
 
   if (imageKeyword) {
-    // Cloudinary fetch: pull a contextually relevant image from Unsplash by keyword
-    const unsplashUrl = `https://source.unsplash.com/featured/700x320/?${encodeURIComponent(imageKeyword)}`;
-    const img = cld.image(unsplashUrl)
+    // Cloudinary fetch: pull a keyword-relevant image via loremflickr (keyword-aware, free)
+    // Cloudinary proxies + caches the result on its CDN, applies transformations on top
+    const keyword = imageKeyword.trim().replace(/\s+/g, ',');
+    const fetchUrl = `https://loremflickr.com/700/320/${encodeURIComponent(keyword)}`;
+    const img = cld.image(fetchUrl)
       .setDeliveryType('fetch')
       .resize(fill().width(700).height(320).gravity(autoGravity()))
       .adjust(improve());
