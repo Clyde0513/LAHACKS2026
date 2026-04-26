@@ -368,8 +368,42 @@
 
 .rmn-bar-secondary {
   display: flex;
+  align-items: center;
   gap: 0.65rem;
   flex-wrap: wrap;
+}
+
+/* ── Difficulty picker ───────────────────────────────────────────────────── */
+.rmn-diff-picker {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.rmn-diff-btn {
+  font-size: 0.78rem;
+  padding: 0.38rem 0.75rem;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.rmn-diff-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.rmn-diff-btn--active {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+.rmn-diff-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .rmn-bar-btn {

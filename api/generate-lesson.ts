@@ -3,16 +3,30 @@ import { callOpenAI } from './_lib/openai.js';
 import type { Lesson, Roadmap } from '../src/types.js';
 
 const SYSTEM =
-  'You are an expert educator. Create clear, engaging, beginner-friendly lesson content. ' +
-  'Always return valid JSON matching the exact schema. Never use technical jargon without explaining it. ' +
+  'You are an expert educator. Create clear, engaging lesson content calibrated precisely to the requested difficulty level. ' +
+  'Always return valid JSON matching the exact schema. Never use technical jargon without explaining it at beginner/simplified level. ' +
+  'At advanced level, embrace depth, nuance, and technical precision. ' +
   'Analogies should be vivid and relatable to everyday life.';
+
+const DIFF_INSTRUCTIONS: Record<string, string> = {
+  Simplified:   'Use ELI5 style. No jargon. Maximum analogies. Very short explanations.',
+  Beginner:     'Beginner-friendly. Light jargon with inline explanations. Clear and encouraging.',
+  Intermediate: 'Assume basic familiarity. Go deeper. Introduce technical terms with context.',
+  Advanced:     'Full technical depth. Cover edge cases, tradeoffs, implementation nuances. No hand-holding.',
+};
+
+function diffInstruction(difficulty: string): string {
+  return DIFF_INSTRUCTIONS[difficulty] ?? DIFF_INSTRUCTIONS['Beginner'];
+}
 
 function buildLessonPrompt(roadmap: Roadmap): string {
   const moduleList = roadmap.modules
     .map((m) => `  - id:"${m.id}" title:"${m.title}" (${m.description})`)
     .join('\n');
 
-  return `Create a complete lesson for the topic: "${roadmap.topic}" (${roadmap.difficulty} level).
+  return `Create a complete lesson for the topic: "${roadmap.topic}" at ${roadmap.difficulty} difficulty level.
+
+Difficulty style: ${diffInstruction(roadmap.difficulty)}
 
 The lesson has these modules:
 ${moduleList}
@@ -32,7 +46,7 @@ Return ONLY this JSON structure:
       "title": "Concept Title (concise, 3-6 words)",
       "explanation": "2-3 sentence clear explanation a beginner can grasp immediately.",
       "analogy": "A vivid real-world analogy that makes this concept click. Start with 'Think of it like...'",
-      "imageKeyword": "2-4 words describing a vivid photo that visually represents this concept (e.g. 'neural network diagram', 'dna double helix', 'solar panels rooftop')",
+      "imageKeyword": "2-4 specific, concrete, photographic keywords for THIS card's concept — must differ from other cards (e.g. 'glowing quantum particles', 'circuit board closeup', 'superposition wave diagram'). Use nouns + adjectives, avoid generic words like 'technology' or 'science'",
       "keyTerms": [
         { "term": "Term", "definition": "Plain-language definition in one sentence." }
       ],
@@ -51,7 +65,7 @@ Rules:
 - Vary the quizCorrectIndex — don't always use 0
 - Keep explanations under 60 words
 - Keep analogies under 50 words
-- imageKeyword: 2-4 words, concrete and visual (not abstract), suitable as a photo search query`;
+- imageKeyword: 2-4 words, concrete and photographic, UNIQUE per card — no two cards should share the same keyword. Think of a real photograph that would appear on a magazine cover for this specific concept.`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {

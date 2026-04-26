@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { generateRoadmap } from '../api/generateRoadmap';
+import type { Difficulty } from '../api/generateRoadmap';
 import type { Roadmap } from '../types';
 import './RoadmapScreen.css';
 
@@ -36,7 +37,17 @@ function topicEmoji(topic: string) {
   return COVER_EMOJIS[topicHash(topic) % COVER_EMOJIS.length];
 }
 
-// ── Skeleton primitive ───────────────────────────────────────────────────────
+// ── Difficulty config ─────────────────────────────────────────────────────────
+const DIFFICULTIES: { value: Difficulty; label: string; emoji: string; color: string }[] = [
+  { value: 'simplified',   label: 'Simplified',   emoji: '🟢', color: '#34d399' },
+  { value: 'beginner',     label: 'Beginner',     emoji: '🔵', color: '#60a5fa' },
+  { value: 'intermediate', label: 'Intermediate', emoji: '🟡', color: '#fbbf24' },
+  { value: 'advanced',     label: 'Advanced',     emoji: '🔴', color: '#f87171' },
+];
+
+function diffColor(difficulty: string): string {
+  return DIFFICULTIES.find((d) => d.label === difficulty)?.color ?? '#60a5fa';
+}
 function Skel({ w = '100%', h = '1rem', radius = '6px' }: { w?: string; h?: string; radius?: string }) {
   return <div className="rmn-skel" style={{ width: w, height: h, borderRadius: radius }} />;
 }
@@ -59,7 +70,7 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
   // Status is initialised as loading; subsequent resets happen in event
   // handlers (not inside effects) to avoid cascading-render warnings.
   const [status, setStatus]         = useState<Status>({ kind: 'loading' });
-  const [simplified, setSimplified] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
   const [genKey, setGenKey]         = useState(0);
 
   const gradient = topicGradient(topic);
@@ -68,12 +79,12 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
   useEffect(() => {
     let cancelled = false;
 
-    generateRoadmap(topic, simplified)
+    generateRoadmap(topic, difficulty)
       .then((r) => { if (!cancelled) setStatus({ kind: 'ready', roadmap: r }); })
       .catch((e: Error) => { if (!cancelled) setStatus({ kind: 'error', message: e.message }); });
 
     return () => { cancelled = true; };
-  }, [topic, simplified, genKey]);
+  }, [topic, difficulty, genKey]);
 
   // Event handlers set loading state themselves — safe because handlers are
   // not called during render, so there is no cascading-render concern.
@@ -82,9 +93,10 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
     setGenKey((k) => k + 1);
   };
 
-  const handleSimplify = () => {
+  const handleDifficultyChange = (d: Difficulty) => {
+    if (d === difficulty) return;
     setStatus({ kind: 'loading' });
-    setSimplified(true);
+    setDifficulty(d);
     setGenKey((k) => k + 1);
   };
 
@@ -133,8 +145,8 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
                 <h1 className="rmn-cover-title">{roadmap.topic}</h1>
                 <p className="rmn-cover-tagline">{roadmap.tagline}</p>
                 <div className="rmn-cover-badges">
-                  <span className="rmn-badge rmn-badge-diff">
-                    {roadmap.difficulty === 'Simplified' ? '🟢 Simplified' : '🔵 Beginner'}
+                  <span className="rmn-badge rmn-badge-diff" style={{ color: diffColor(roadmap.difficulty) }}>
+                    {DIFFICULTIES.find((d) => d.label === roadmap.difficulty)?.emoji ?? '🔵'}{' '}{roadmap.difficulty}
                   </span>
                   <span className="rmn-badge rmn-badge-dur">⏱ {roadmap.totalDuration}</span>
                   <span className="rmn-badge rmn-badge-mods">
@@ -222,15 +234,19 @@ export default function RoadmapScreen({ topic, onBack, onStart }: Props) {
       {!errorMsg && (
         <div className="rmn-bar">
           <div className="rmn-bar-secondary">
-            {!simplified && (
-              <button
-                className="tmn-btn-ghost rmn-bar-btn"
-                disabled={isLoading}
-                onClick={handleSimplify}
-              >
-                🧩 Simplify for me
-              </button>
-            )}
+            <div className="rmn-diff-picker">
+              {DIFFICULTIES.map((d) => (
+                <button
+                  key={d.value}
+                  className={`rmn-diff-btn${difficulty === d.value ? ' rmn-diff-btn--active' : ''}`}
+                  style={difficulty === d.value ? { borderColor: d.color, color: d.color } : {}}
+                  disabled={isLoading}
+                  onClick={() => handleDifficultyChange(d.value)}
+                >
+                  {d.emoji} {d.label}
+                </button>
+              ))}
+            </div>
             <button
               className="tmn-btn-ghost rmn-bar-btn"
               disabled={isLoading}

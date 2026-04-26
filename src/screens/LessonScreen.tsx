@@ -173,10 +173,12 @@ function buildVisualImage(
   }
 
   if (imageKeyword) {
-    // Cloudinary fetch: pull a keyword-relevant image via loremflickr (keyword-aware, free)
-    // Cloudinary proxies + caches the result on its CDN, applies transformations on top
+    // Cloudinary fetch: pull a keyword-relevant image via loremflickr.
+    // The `lock` param (1–100) makes each card get a DIFFERENT photo even
+    // if two cards share a similar keyword — keeps visuals varied across the deck.
+    const lockId = (cardIndex % 100) + 1;
     const keyword = imageKeyword.trim().replace(/\s+/g, ',');
-    const fetchUrl = `https://loremflickr.com/700/320/${encodeURIComponent(keyword)}`;
+    const fetchUrl = `https://loremflickr.com/700/320/${encodeURIComponent(keyword)}?lock=${lockId}`;
     const img = cld.image(fetchUrl)
       .setDeliveryType('fetch')
       .resize(fill().width(700).height(320).gravity(autoGravity()))
