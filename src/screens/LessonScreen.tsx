@@ -173,12 +173,14 @@ function buildVisualImage(
   }
 
   if (imageKeyword) {
-    // Cloudinary fetch: pull a keyword-relevant image via loremflickr.
-    // The `lock` param (1–100) makes each card get a DIFFERENT photo even
-    // if two cards share a similar keyword — keeps visuals varied across the deck.
-    const lockId = (cardIndex % 100) + 1;
-    const keyword = imageKeyword.trim().replace(/\s+/g, ',');
-    const fetchUrl = `https://loremflickr.com/700/320/${encodeURIComponent(keyword)}?lock=${lockId}`;
+    // Use Picsum Photos seeded by keyword hash + cardIndex for deterministic,
+    // beautiful, varied images — no loremflickr which returns noisy Flickr results.
+    // Different seeds → different photos per card; reproducible per reload.
+    const seed = imageKeyword
+      .split('')
+      .reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, cardIndex * 2654435761);
+    const picId = Math.abs(seed) % 1000; // Picsum has ~1000 curated photos
+    const fetchUrl = `https://picsum.photos/seed/${picId}/700/320`;
     const img = cld.image(fetchUrl)
       .setDeliveryType('fetch')
       .resize(fill().width(700).height(320).gravity(autoGravity()))
